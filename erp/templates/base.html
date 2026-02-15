@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}ERP{% endblock %}</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+    {% if current_user.is_authenticated %}
+    <nav class="sidebar">
+        <div class="sidebar-header">
+            <h2>ERP</h2>
+        </div>
+        <ul class="nav-links">
+            <li><a href="{{ url_for('dashboard.index') }}" class="{% if request.path == '/' %}active{% endif %}">Dashboard</a></li>
+            <li><a href="{{ url_for('contacts.index') }}" class="{% if '/contacts' in request.path %}active{% endif %}">Contacts</a></li>
+            <li><a href="{{ url_for('products.index') }}" class="{% if '/products' in request.path %}active{% endif %}">Products</a></li>
+            <li><a href="{{ url_for('sales.index') }}" class="{% if '/sales' in request.path %}active{% endif %}">Sales</a></li>
+            <li><a href="{{ url_for('purchasing.index') }}" class="{% if '/purchasing' in request.path %}active{% endif %}">Purchasing</a></li>
+            <li><a href="{{ url_for('accounting.index') }}" class="{% if '/accounting' in request.path %}active{% endif %}">Accounting</a></li>
+            <li><a href="{{ url_for('hr.index') }}" class="{% if '/hr' in request.path %}active{% endif %}">HR</a></li>
+        </ul>
+        <div class="sidebar-footer">
+            <span>{{ current_user.full_name }}</span>
+            <a href="{{ url_for('auth.logout') }}">Logout</a>
+        </div>
+    </nav>
+    {% endif %}
+    <main class="{% if current_user.is_authenticated %}content{% else %}content-full{% endif %}">
+        {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+        <div class="flash-messages">
+            {% for category, message in messages %}
+            <div class="flash flash-{{ category }}">{{ message }}</div>
+            {% endfor %}
+        </div>
+        {% endif %}
+        {% endwith %}
+        {% block content %}{% endblock %}
+    </main>
+</body>
+</html>

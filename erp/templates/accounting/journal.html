@@ -1,0 +1,50 @@
+{% extends "base.html" %}
+
+{% block title %}Journal Entries - ERP{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <h1>Journal Entries</h1>
+    <div class="actions">
+        <a href="{{ url_for('accounting.index') }}" class="btn btn-secondary">Chart of Accounts</a>
+        <a href="{{ url_for('accounting.journal_new') }}" class="btn btn-primary">New Journal Entry</a>
+    </div>
+</div>
+
+<div class="card">
+    <table>
+        <thead>
+            <tr>
+                <th>ID</th>
+                <th>Date</th>
+                <th>Reference</th>
+                <th>Description</th>
+                <th>Status</th>
+                <th class="text-right">Amount</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for entry in entries %}
+            <tr>
+                <td><a href="{{ url_for('accounting.journal_detail', id=entry.id) }}">{{ entry.id }}</a></td>
+                <td>{{ entry.entry_date }}</td>
+                <td>{{ entry.reference or '' }}</td>
+                <td>{{ entry.description or '' }}</td>
+                <td>
+                    {% if entry.posted %}
+                    <span class="badge badge-paid">Posted</span>
+                    {% else %}
+                    <span class="badge badge-draft">Draft</span>
+                    {% endif %}
+                </td>
+                <td class="text-right">${{ "%.2f"|format(entry.total_debit) }}</td>
+            </tr>
+            {% else %}
+            <tr>
+                <td colspan="6" class="text-center">No journal entries yet.</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endblock %}

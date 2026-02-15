@@ -1,0 +1,65 @@
+{% extends "base.html" %}
+{% block title %}{{ "Edit" if product else "New" }} Product - ERP{% endblock %}
+{% block content %}
+<div class="page-header">
+    <h1>{{ "Edit" if product else "New" }} Product</h1>
+    <a href="{{ url_for('products.index') }}" class="btn btn-secondary">Back to List</a>
+</div>
+<div class="card">
+    <form method="post">
+        <div class="form-row">
+            <div class="form-group">
+                <label>SKU</label>
+                <input type="text" name="sku" value="{{ product.sku if product else '' }}" required>
+            </div>
+            <div class="form-group">
+                <label>Name</label>
+                <input type="text" name="name" value="{{ product.name if product else '' }}" required>
+            </div>
+        </div>
+        <div class="form-group">
+            <label>Description</label>
+            <textarea name="description">{{ product.description if product and product.description else '' }}</textarea>
+        </div>
+        <div class="form-row">
+            <div class="form-group">
+                <label>Category</label>
+                <select name="category_id">
+                    <option value="">-- No Category --</option>
+                    {% for cat in categories %}
+                    <option value="{{ cat.id }}" {% if product and product.category_id == cat.id %}selected{% endif %}>{{ cat.name }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="form-group">
+                <label>Unit</label>
+                <input type="text" name="unit" value="{{ product.unit if product else 'unit' }}" placeholder="e.g. unit, kg, litre">
+            </div>
+        </div>
+        <div class="form-row">
+            <div class="form-group">
+                <label>Unit Price</label>
+                <input type="number" name="unit_price" step="0.01" min="0" value="{{ '%.2f'|format(product.unit_price) if product else '0.00' }}">
+            </div>
+            <div class="form-group">
+                <label>Cost Price</label>
+                <input type="number" name="cost_price" step="0.01" min="0" value="{{ '%.2f'|format(product.cost_price) if product else '0.00' }}">
+            </div>
+        </div>
+        <div class="form-row">
+            <div class="form-group">
+                <label>Stock Quantity</label>
+                <input type="number" name="stock_qty" step="any" value="{{ product.stock_qty if product else 0 }}">
+            </div>
+            <div class="form-group">
+                <label>Reorder Level</label>
+                <input type="number" name="reorder_level" step="any" min="0" value="{{ product.reorder_level if product else 0 }}">
+            </div>
+        </div>
+        <div class="mt-1">
+            <button type="submit" class="btn btn-primary">{{ "Update" if product else "Create" }} Product</button>
+            <a href="{{ url_for('products.index') }}" class="btn btn-secondary">Cancel</a>
+        </div>
+    </form>
+</div>
+{% endblock %}

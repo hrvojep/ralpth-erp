@@ -1,0 +1,37 @@
+{% extends "base.html" %}
+
+{% block title %}New Account - ERP{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <h1>New Account</h1>
+    <a href="{{ url_for('accounting.index') }}" class="btn btn-secondary">Back to Chart of Accounts</a>
+</div>
+
+<div class="card">
+    <form method="post">
+        <div class="form-row">
+            <div class="form-group">
+                <label>Account Code</label>
+                <input type="text" name="code" value="{{ account.get('code', '') }}" required placeholder="e.g. 1000">
+            </div>
+            <div class="form-group">
+                <label>Account Name</label>
+                <input type="text" name="name" value="{{ account.get('name', '') }}" required placeholder="e.g. Cash">
+            </div>
+        </div>
+        <div class="form-group">
+            <label>Account Type</label>
+            <select name="account_type" required>
+                <option value="">-- Select Type --</option>
+                <option value="asset" {% if account.get('account_type') == 'asset' %}selected{% endif %}>Asset</option>
+                <option value="liability" {% if account.get('account_type') == 'liability' %}selected{% endif %}>Liability</option>
+                <option value="equity" {% if account.get('account_type') == 'equity' %}selected{% endif %}>Equity</option>
+                <option value="revenue" {% if account.get('account_type') == 'revenue' %}selected{% endif %}>Revenue</option>
+                <option value="expense" {% if account.get('account_type') == 'expense' %}selected{% endif %}>Expense</option>
+            </select>
+        </div>
+        <button type="submit" class="btn btn-primary">Create Account</button>
+    </form>
+</div>
+{% endblock %}

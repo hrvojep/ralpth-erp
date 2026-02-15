@@ -1,0 +1,47 @@
+{% extends "base.html" %}
+{% block title %}Sales Orders - ERP{% endblock %}
+{% block content %}
+<div class="page-header">
+    <h1>Sales Orders</h1>
+    <div class="actions">
+        <a href="{{ url_for('sales.invoices') }}" class="btn btn-secondary">Invoices</a>
+        <a href="{{ url_for('sales.new') }}" class="btn btn-primary">New Sales Order</a>
+    </div>
+</div>
+
+<div class="card">
+    <table>
+        <thead>
+            <tr>
+                <th>Order #</th>
+                <th>Customer</th>
+                <th>Date</th>
+                <th>Status</th>
+                <th class="text-right">Total</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for order in orders %}
+            <tr>
+                <td><a href="{{ url_for('sales.detail', id=order.id) }}">{{ order.order_number }}</a></td>
+                <td>{{ order.customer_name }}</td>
+                <td>{{ order.order_date }}</td>
+                <td><span class="badge badge-{{ order.status }}">{{ order.status }}</span></td>
+                <td class="text-right">${{ "%.2f"|format(order.total) }}</td>
+                <td class="actions">
+                    <a href="{{ url_for('sales.detail', id=order.id) }}" class="btn btn-secondary btn-sm">View</a>
+                    {% if order.status == 'draft' %}
+                    <a href="{{ url_for('sales.edit', id=order.id) }}" class="btn btn-secondary btn-sm">Edit</a>
+                    {% endif %}
+                </td>
+            </tr>
+            {% else %}
+            <tr>
+                <td colspan="6" class="text-center">No sales orders found.</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endblock %}

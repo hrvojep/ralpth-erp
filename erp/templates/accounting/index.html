@@ -1,0 +1,46 @@
+{% extends "base.html" %}
+
+{% block title %}Chart of Accounts - ERP{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <h1>Chart of Accounts</h1>
+    <div class="actions">
+        <a href="{{ url_for('accounting.trial_balance') }}" class="btn btn-secondary">Trial Balance</a>
+        <a href="{{ url_for('accounting.profit_loss') }}" class="btn btn-secondary">Profit &amp; Loss</a>
+        <a href="{{ url_for('accounting.balance_sheet') }}" class="btn btn-secondary">Balance Sheet</a>
+        <a href="{{ url_for('accounting.journal') }}" class="btn btn-secondary">Journal</a>
+        <a href="{{ url_for('accounting.account_new') }}" class="btn btn-primary">New Account</a>
+    </div>
+</div>
+
+{% set type_labels = {'asset': 'Assets', 'liability': 'Liabilities', 'equity': 'Equity', 'revenue': 'Revenue', 'expense': 'Expenses'} %}
+
+{% for acct_type in ['asset', 'liability', 'equity', 'revenue', 'expense'] %}
+<div class="card">
+    <h3>{{ type_labels[acct_type] }}</h3>
+    <table>
+        <thead>
+            <tr>
+                <th>Code</th>
+                <th>Name</th>
+                <th class="text-right">Balance</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for acct in grouped[acct_type] %}
+            <tr>
+                <td>{{ acct.code }}</td>
+                <td>{{ acct.name }}</td>
+                <td class="text-right">${{ "%.2f"|format(acct.balance) }}</td>
+            </tr>
+            {% else %}
+            <tr>
+                <td colspan="3" class="text-center">No {{ type_labels[acct_type]|lower }} accounts.</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endfor %}
+{% endblock %}

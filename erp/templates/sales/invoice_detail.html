@@ -1,0 +1,91 @@
+{% extends "base.html" %}
+{% block title %}{{ invoice.invoice_number }} - ERP{% endblock %}
+{% block content %}
+<div class="page-header">
+    <h1>{{ invoice.invoice_number }}</h1>
+    <div class="actions">
+        {% if invoice.status != 'paid' and invoice.status != 'cancelled' %}
+        <form method="post" action="{{ url_for('sales.mark_paid', id=invoice.id) }}" style="display:inline;">
+            <button type="submit" class="btn btn-success">Mark as Paid</button>
+        </form>
+        {% endif %}
+        {% if invoice.sales_order_id %}
+        <a href="{{ url_for('sales.detail', id=invoice.sales_order_id) }}" class="btn btn-secondary">View Sales Order</a>
+        {% endif %}
+        <a href="{{ url_for('sales.invoices') }}" class="btn btn-secondary">Back to Invoices</a>
+    </div>
+</div>
+
+<div class="card">
+    <div class="detail-grid">
+        <div class="detail-item">
+            <label>Invoice Number</label>
+            <div class="value">{{ invoice.invoice_number }}</div>
+        </div>
+        <div class="detail-item">
+            <label>Status</label>
+            <div class="value"><span class="badge badge-{{ invoice.status }}">{{ invoice.status }}</span></div>
+        </div>
+        <div class="detail-item">
+            <label>Customer</label>
+            <div class="value">{{ invoice.customer_name }}</div>
+        </div>
+        <div class="detail-item">
+            <label>Invoice Date</label>
+            <div class="value">{{ invoice.invoice_date }}</div>
+        </div>
+        {% if invoice.due_date %}
+        <div class="detail-item">
+            <label>Due Date</label>
+            <div class="value">{{ invoice.due_date }}</div>
+        </div>
+        {% endif %}
+        <div class="detail-item">
+            <label>Amount Paid</label>
+            <div class="value">${{ "%.2f"|format(invoice.amount_paid) }}</div>
+        </div>
+        {% if invoice.notes %}
+        <div class="detail-item" style="grid-column: span 2;">
+            <label>Notes</label>
+            <div class="value">{{ invoice.notes }}</div>
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+<div class="card">
+    <h3>Line Items</h3>
+    <table>
+        <thead>
+            <tr>
+                <th>Product</th>
+                <th>Description</th>
+                <th class="text-right">Quantity</th>
+                <th class="text-right">Unit Price</th>
+                <th class="text-right">Line Total</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for line in lines %}
+            <tr>
+                <td>{{ line.product_name or '' }}</td>
+                <td>{{ line.description or '' }}</td>
+                <td class="text-right">{{ line.quantity }}</td>
+                <td class="text-right">${{ "%.2f"|format(line.unit_price) }}</td>
+                <td class="text-right">${{ "%.2f"|format(line.line_total) }}</td>
+            </tr>
+            {% else %}
+            <tr>
+                <td colspan="5" class="text-center">No line items.</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+
+    <div class="totals">
+        <div class="total-line"><span>Subtotal:</span> <span>${{ "%.2f"|format(invoice.subtotal) }}</span></div>
+        <div class="total-line"><span>Tax (10%):</span> <span>${{ "%.2f"|format(invoice.tax_amount) }}</span></div>
+        <div class="total-line grand-total"><span>Total:</span> <span>${{ "%.2f"|format(invoice.total) }}</span></div>
+    </div>
+</div>
+{% endblock %}

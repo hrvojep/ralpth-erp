@@ -1,0 +1,96 @@
+{% extends "base.html" %}
+
+{% block title %}Dashboard - ERP{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <h1>Dashboard</h1>
+</div>
+
+<div class="stats-grid">
+    <div class="stat-card">
+        <div class="stat-value">{{ total_contacts }}</div>
+        <div class="stat-label">Total Contacts</div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-value">{{ total_products }}</div>
+        <div class="stat-label">Products</div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-value">{{ total_sales_orders }}</div>
+        <div class="stat-label">Sales Orders</div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-value">{{ total_purchase_orders }}</div>
+        <div class="stat-label">Purchase Orders</div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-value">{{ pending_invoices }}</div>
+        <div class="stat-label">Pending Invoices</div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-value">${{ "%.2f"|format(total_revenue) }}</div>
+        <div class="stat-label">Total Revenue</div>
+    </div>
+</div>
+
+<div class="card">
+    <h3>Recent Sales Orders</h3>
+    <table>
+        <thead>
+            <tr>
+                <th>Order #</th>
+                <th>Customer</th>
+                <th>Date</th>
+                <th>Status</th>
+                <th class="text-right">Total</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for order in recent_sales %}
+            <tr>
+                <td>{{ order.order_number }}</td>
+                <td>{{ order.customer_name }}</td>
+                <td>{{ order.order_date }}</td>
+                <td><span class="badge badge-{{ order.status }}">{{ order.status }}</span></td>
+                <td class="text-right">${{ "%.2f"|format(order.total) }}</td>
+            </tr>
+            {% else %}
+            <tr>
+                <td colspan="5">No sales orders yet.</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+
+<div class="card">
+    <h3>Recent Purchase Orders</h3>
+    <table>
+        <thead>
+            <tr>
+                <th>PO #</th>
+                <th>Supplier</th>
+                <th>Date</th>
+                <th>Status</th>
+                <th class="text-right">Total</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for po in recent_purchases %}
+            <tr>
+                <td>{{ po.po_number }}</td>
+                <td>{{ po.supplier_name }}</td>
+                <td>{{ po.order_date }}</td>
+                <td><span class="badge badge-{{ po.status }}">{{ po.status }}</span></td>
+                <td class="text-right">${{ "%.2f"|format(po.total) }}</td>
+            </tr>
+            {% else %}
+            <tr>
+                <td colspan="5">No purchase orders yet.</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endblock %}

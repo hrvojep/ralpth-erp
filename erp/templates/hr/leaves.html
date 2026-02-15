@@ -1,0 +1,55 @@
+{% extends "base.html" %}
+{% block title %}Leave Requests - HR - ERP{% endblock %}
+{% block content %}
+<div class="page-header">
+    <h1>Leave Requests</h1>
+    <a href="{{ url_for('hr.index') }}" class="btn btn-secondary">Back to Employees</a>
+</div>
+
+<div class="card">
+    <table>
+        <thead>
+            <tr>
+                <th>Employee</th>
+                <th>Type</th>
+                <th>Start Date</th>
+                <th>End Date</th>
+                <th>Reason</th>
+                <th>Status</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for lr in leave_requests %}
+            <tr>
+                <td>
+                    <a href="{{ url_for('hr.detail', id=lr.employee_id) }}">{{ lr.first_name }} {{ lr.last_name }}</a>
+                    <div style="font-size: 0.8rem; color: var(--text-muted);">{{ lr.employee_number }}</div>
+                </td>
+                <td>{{ lr.leave_type|capitalize }}</td>
+                <td>{{ lr.start_date }}</td>
+                <td>{{ lr.end_date }}</td>
+                <td>{{ lr.reason or '-' }}</td>
+                <td><span class="badge badge-{{ lr.status }}">{{ lr.status }}</span></td>
+                <td class="actions">
+                    {% if lr.status == 'pending' %}
+                    <form method="post" action="{{ url_for('hr.leave_approve', id=lr.id) }}" style="display:inline;">
+                        <button type="submit" class="btn btn-success btn-sm">Approve</button>
+                    </form>
+                    <form method="post" action="{{ url_for('hr.leave_reject', id=lr.id) }}" style="display:inline;">
+                        <button type="submit" class="btn btn-danger btn-sm">Reject</button>
+                    </form>
+                    {% else %}
+                    -
+                    {% endif %}
+                </td>
+            </tr>
+            {% else %}
+            <tr>
+                <td colspan="7" class="text-center">No leave requests found.</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endblock %}

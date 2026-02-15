@@ -1,0 +1,161 @@
+{% extends "base.html" %}
+
+{% block title %}{{ 'Edit' if editing else 'New' }} Purchase Order - ERP{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <h1>{{ 'Edit' if editing else 'New' }} Purchase Order</h1>
+</div>
+
+<form method="POST" class="card" id="po-form">
+    <div class="form-row">
+        <div class="form-group">
+            <label for="supplier_id">Supplier *</label>
+            <select name="supplier_id" id="supplier_id" required>
+                <option value="">-- Select Supplier --</option>
+                {% for s in suppliers %}
+                <option value="{{ s.id }}" {% if po and po.supplier_id == s.id %}selected{% endif %}>{{ s.name }}</option>
+                {% endfor %}
+            </select>
+        </div>
+        <div class="form-group">
+            <label for="order_date">Order Date *</label>
+            <input type="date" name="order_date" id="order_date" required
+                   value="{{ po.order_date if po else '' }}">
+        </div>
+        <div class="form-group">
+            <label for="expected_date">Expected Date</label>
+            <input type="date" name="expected_date" id="expected_date"
+                   value="{{ po.expected_date if po and po.expected_date else '' }}">
+        </div>
+    </div>
+
+    <div class="form-group">
+        <label for="notes">Notes</label>
+        <textarea name="notes" id="notes">{{ po.notes if po and po.notes else '' }}</textarea>
+    </div>
+
+    <h3 class="mb-1">Line Items</h3>
+    <table class="line-items-table">
+        <thead>
+            <tr>
+                <th>Product</th>
+                <th style="width:100px">Quantity</th>
+                <th style="width:120px">Unit Price</th>
+                <th style="width:120px" class="text-right">Line Total</th>
+                <th style="width:50px"></th>
+            </tr>
+        </thead>
+        <tbody id="line-items">
+            {% if editing and lines %}
+                {% for line in lines %}
+                <tr class="line-row">
+                    <td>
+                        <select name="product_id[]" class="product-select" required>
+                            <option value="">-- Select --</option>
+                            {% for p in products %}
+                            <option value="{{ p.id }}" {% if p.id == line.product_id %}selected{% endif %}>{{ p.sku }} - {{ p.name }}</option>
+                            {% endfor %}
+                        </select>
+                    </td>
+                    <td><input type="number" name="quantity[]" class="qty-input" step="any" min="0.01" required value="{{ line.quantity }}"></td>
+                    <td><input type="number" name="unit_price[]" class="price-input" step="any" min="0" required value="{{ line.unit_price }}"></td>
+                    <td class="text-right line-total">{{ "%.2f"|format(line.line_total) }}</td>
+                    <td class="text-center"><button type="button" class="btn btn-danger btn-sm remove-line">X</button></td>
+                </tr>
+                {% endfor %}
+            {% else %}
+                <tr class="line-row">
+                    <td>
+                        <select name="product_id[]" class="product-select" required>
+                            <option value="">-- Select --</option>
+                            {% for p in products %}
+                            <option value="{{ p.id }}">{{ p.sku }} - {{ p.name }}</option>
+                            {% endfor %}
+                        </select>
+                    </td>
+                    <td><input type="number" name="quantity[]" class="qty-input" step="any" min="0.01" required value="1"></td>
+                    <td><input type="number" name="unit_price[]" class="price-input" step="any" min="0" required value="0"></td>
+                    <td class="text-right line-total">0.00</td>
+                    <td class="text-center"><button type="button" class="btn btn-danger btn-sm remove-line">X</button></td>
+                </tr>
+            {% endif %}
+        </tbody>
+    </table>
+
+    <button type="button" class="btn btn-secondary btn-sm mt-1" id="add-line">+ Add Line</button>
+
+    <div class="totals" id="totals">
+        <div class="total-line"><span>Subtotal:</span> <span id="subtotal">0.00</span></div>
+        <div class="total-line"><span>Tax (10%):</span> <span id="tax">0.00</span></div>
+        <div class="total-line grand-total"><span>Total:</span> <span id="grand-total">0.00</span></div>
+    </div>
+
+    <div class="mt-1">
+        <button type="submit" class="btn btn-primary">{{ 'Update' if editing else 'Create' }} Purchase Order</button>
+        <a href="{{ url_for('purchasing.index') }}" class="btn btn-secondary">Cancel</a>
+    </div>
+</form>
+
+<script>
+(function() {
+    var productsData = {{ products_json|safe }};
+
+    var optionsHtml = '<option value="">-- Select --</option>';
+    {% for p in products %}
+    optionsHtml += '<option value="{{ p.id }}">{{ p.sku }} - {{ p.name }}</option>';
+    {% endfor %}
+
+    function recalc() {
+        var subtotal = 0;
+        document.querySelectorAll('.line-row').forEach(function(row) {
+            var qty = parseFloat(row.querySelector('.qty-input').value) || 0;
+            var price = parseFloat(row.querySelector('.price-input').value) || 0;
+            var lineTotal = qty * price;
+            row.querySelector('.line-total').textContent = lineTotal.toFixed(2);
+            subtotal += lineTotal;
+        });
+        var tax = subtotal * 0.10;
+        document.getElementById('subtotal').textContent = subtotal.toFixed(2);
+        document.getElementById('tax').textContent = tax.toFixed(2);
+        document.getElementById('grand-total').textContent = (subtotal + tax).toFixed(2);
+    }
+
+    function bindRow(row) {
+        row.querySelector('.product-select').addEventListener('change', function() {
+            var pid = this.value;
+            if (pid && productsData[pid]) {
+                row.querySelector('.price-input').value = productsData[pid].cost_price;
+                recalc();
+            }
+        });
+        row.querySelector('.qty-input').addEventListener('input', recalc);
+        row.querySelector('.price-input').addEventListener('input', recalc);
+        row.querySelector('.remove-line').addEventListener('click', function() {
+            if (document.querySelectorAll('.line-row').length > 1) {
+                row.remove();
+                recalc();
+            }
+        });
+    }
+
+    document.querySelectorAll('.line-row').forEach(bindRow);
+
+    document.getElementById('add-line').addEventListener('click', function() {
+        var tbody = document.getElementById('line-items');
+        var tr = document.createElement('tr');
+        tr.className = 'line-row';
+        tr.innerHTML =
+            '<td><select name="product_id[]" class="product-select" required>' + optionsHtml + '</select></td>' +
+            '<td><input type="number" name="quantity[]" class="qty-input" step="any" min="0.01" required value="1"></td>' +
+            '<td><input type="number" name="unit_price[]" class="price-input" step="any" min="0" required value="0"></td>' +
+            '<td class="text-right line-total">0.00</td>' +
+            '<td class="text-center"><button type="button" class="btn btn-danger btn-sm remove-line">X</button></td>';
+        tbody.appendChild(tr);
+        bindRow(tr);
+    });
+
+    recalc();
+})();
+</script>
+{% endblock %}

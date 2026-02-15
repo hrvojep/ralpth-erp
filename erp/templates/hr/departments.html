@@ -1,0 +1,45 @@
+{% extends "base.html" %}
+{% block title %}Departments - HR - ERP{% endblock %}
+{% block content %}
+<div class="page-header">
+    <h1>Departments</h1>
+    <a href="{{ url_for('hr.index') }}" class="btn btn-secondary">Back to Employees</a>
+</div>
+
+<div class="card">
+    <h3>Add Department</h3>
+    <form method="post">
+        <div class="form-row">
+            <div class="form-group">
+                <label>Department Name *</label>
+                <input type="text" name="name" required>
+            </div>
+        </div>
+        <button type="submit" class="btn btn-primary">Add Department</button>
+    </form>
+</div>
+
+<div class="card">
+    <h3>All Departments</h3>
+    <table>
+        <thead>
+            <tr>
+                <th>Name</th>
+                <th>Employees</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for dept in departments %}
+            <tr>
+                <td>{{ dept.name }}</td>
+                <td>{{ dept.employee_count }}</td>
+            </tr>
+            {% else %}
+            <tr>
+                <td colspan="2" class="text-center">No departments yet. Add one above.</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endblock %}

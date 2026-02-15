@@ -1,0 +1,93 @@
+{% extends "base.html" %}
+{% block title %}{{ employee.first_name }} {{ employee.last_name }} - HR - ERP{% endblock %}
+{% block content %}
+<div class="page-header">
+    <h1>{{ employee.first_name }} {{ employee.last_name }}</h1>
+    <div class="actions">
+        <a href="{{ url_for('hr.index') }}" class="btn btn-secondary">Back to List</a>
+        <a href="{{ url_for('hr.edit', id=employee.id) }}" class="btn btn-primary">Edit</a>
+        <a href="{{ url_for('hr.leave_new', id=employee.id) }}" class="btn btn-success">New Leave Request</a>
+    </div>
+</div>
+
+<div class="card">
+    <h3>Employee Details</h3>
+    <div class="detail-grid">
+        <div class="detail-item">
+            <label>Employee Number</label>
+            <div class="value">{{ employee.employee_number }}</div>
+        </div>
+        <div class="detail-item">
+            <label>Name</label>
+            <div class="value">{{ employee.first_name }} {{ employee.last_name }}</div>
+        </div>
+        <div class="detail-item">
+            <label>Email</label>
+            <div class="value">{{ employee.email or '-' }}</div>
+        </div>
+        <div class="detail-item">
+            <label>Phone</label>
+            <div class="value">{{ employee.phone or '-' }}</div>
+        </div>
+        <div class="detail-item">
+            <label>Department</label>
+            <div class="value">{{ employee.department_name or '-' }}</div>
+        </div>
+        <div class="detail-item">
+            <label>Job Title</label>
+            <div class="value">{{ employee.job_title or '-' }}</div>
+        </div>
+        <div class="detail-item">
+            <label>Hire Date</label>
+            <div class="value">{{ employee.hire_date or '-' }}</div>
+        </div>
+        <div class="detail-item">
+            <label>Salary</label>
+            <div class="value">{{ "%.2f"|format(employee.salary) }}</div>
+        </div>
+        <div class="detail-item">
+            <label>Status</label>
+            <div class="value">
+                {% if employee.active %}
+                <span class="badge badge-invoiced">Active</span>
+                {% else %}
+                <span class="badge badge-cancelled">Inactive</span>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="card">
+    <div class="page-header" style="margin-bottom: 1rem;">
+        <h3>Leave Requests</h3>
+        <a href="{{ url_for('hr.leave_new', id=employee.id) }}" class="btn btn-primary btn-sm">New Leave Request</a>
+    </div>
+    <table>
+        <thead>
+            <tr>
+                <th>Type</th>
+                <th>Start Date</th>
+                <th>End Date</th>
+                <th>Reason</th>
+                <th>Status</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for lr in leave_requests %}
+            <tr>
+                <td>{{ lr.leave_type|capitalize }}</td>
+                <td>{{ lr.start_date }}</td>
+                <td>{{ lr.end_date }}</td>
+                <td>{{ lr.reason or '-' }}</td>
+                <td><span class="badge badge-{{ lr.status }}">{{ lr.status }}</span></td>
+            </tr>
+            {% else %}
+            <tr>
+                <td colspan="5" class="text-center">No leave requests.</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endblock %}

@@ -1,0 +1,151 @@
+{% extends "base.html" %}
+
+{% block title %}New Journal Entry - ERP{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <h1>New Journal Entry</h1>
+    <a href="{{ url_for('accounting.journal') }}" class="btn btn-secondary">Back to Journal</a>
+</div>
+
+<div class="card">
+    <form method="post" id="journal-form">
+        <div class="form-row">
+            <div class="form-group">
+                <label>Date</label>
+                <input type="date" name="entry_date" value="{{ form.get('entry_date', '') }}" required>
+            </div>
+            <div class="form-group">
+                <label>Reference</label>
+                <input type="text" name="reference" value="{{ form.get('reference', '') }}" placeholder="e.g. INV-001">
+            </div>
+        </div>
+        <div class="form-group">
+            <label>Description</label>
+            <input type="text" name="description" value="{{ form.get('description', '') }}" placeholder="Description of the journal entry">
+        </div>
+
+        <h3 class="mt-1 mb-1">Journal Lines</h3>
+        <table class="line-items-table" id="lines-table">
+            <thead>
+                <tr>
+                    <th>Account</th>
+                    <th class="text-right">Debit</th>
+                    <th class="text-right">Credit</th>
+                    <th></th>
+                </tr>
+            </thead>
+            <tbody id="lines-body">
+                <tr class="line-row">
+                    <td>
+                        <select name="account_id[]" required style="width:100%">
+                            <option value="">-- Select Account --</option>
+                            {% for acct in accounts %}
+                            <option value="{{ acct.id }}">{{ acct.code }} - {{ acct.name }}</option>
+                            {% endfor %}
+                        </select>
+                    </td>
+                    <td><input type="number" name="debit[]" step="0.01" min="0" value="0" class="text-right debit-input"></td>
+                    <td><input type="number" name="credit[]" step="0.01" min="0" value="0" class="text-right credit-input"></td>
+                    <td><button type="button" class="btn btn-danger btn-sm remove-line">X</button></td>
+                </tr>
+                <tr class="line-row">
+                    <td>
+                        <select name="account_id[]" required style="width:100%">
+                            <option value="">-- Select Account --</option>
+                            {% for acct in accounts %}
+                            <option value="{{ acct.id }}">{{ acct.code }} - {{ acct.name }}</option>
+                            {% endfor %}
+                        </select>
+                    </td>
+                    <td><input type="number" name="debit[]" step="0.01" min="0" value="0" class="text-right debit-input"></td>
+                    <td><input type="number" name="credit[]" step="0.01" min="0" value="0" class="text-right credit-input"></td>
+                    <td><button type="button" class="btn btn-danger btn-sm remove-line">X</button></td>
+                </tr>
+            </tbody>
+            <tfoot>
+                <tr>
+                    <td><button type="button" class="btn btn-secondary btn-sm" id="add-line">+ Add Line</button></td>
+                    <td class="text-right"><strong id="total-debit">0.00</strong></td>
+                    <td class="text-right"><strong id="total-credit">0.00</strong></td>
+                    <td></td>
+                </tr>
+                <tr id="balance-row">
+                    <td colspan="4" class="text-right" id="balance-msg" style="font-weight:600;"></td>
+                </tr>
+            </tfoot>
+        </table>
+
+        <div class="mt-1">
+            <button type="submit" class="btn btn-primary" id="submit-btn">Save Journal Entry</button>
+        </div>
+    </form>
+</div>
+
+<script>
+(function() {
+    var accountOptions = '';
+    var selects = document.querySelectorAll('#lines-body select');
+    if (selects.length > 0) {
+        accountOptions = selects[0].innerHTML;
+    }
+
+    function recalc() {
+        var debits = document.querySelectorAll('.debit-input');
+        var credits = document.querySelectorAll('.credit-input');
+        var totalD = 0, totalC = 0;
+        debits.forEach(function(el) { totalD += parseFloat(el.value) || 0; });
+        credits.forEach(function(el) { totalC += parseFloat(el.value) || 0; });
+        document.getElementById('total-debit').textContent = totalD.toFixed(2);
+        document.getElementById('total-credit').textContent = totalC.toFixed(2);
+
+        var diff = Math.abs(totalD - totalC);
+        var msg = document.getElementById('balance-msg');
+        if (diff < 0.005) {
+            msg.textContent = 'Balanced';
+            msg.style.color = '#16a34a';
+        } else {
+            msg.textContent = 'Out of balance by $' + diff.toFixed(2);
+            msg.style.color = '#dc2626';
+        }
+    }
+
+    document.getElementById('add-line').addEventListener('click', function() {
+        var tbody = document.getElementById('lines-body');
+        var tr = document.createElement('tr');
+        tr.className = 'line-row';
+        tr.innerHTML = '<td><select name="account_id[]" required style="width:100%">' + accountOptions + '</select></td>'
+            + '<td><input type="number" name="debit[]" step="0.01" min="0" value="0" class="text-right debit-input"></td>'
+            + '<td><input type="number" name="credit[]" step="0.01" min="0" value="0" class="text-right credit-input"></td>'
+            + '<td><button type="button" class="btn btn-danger btn-sm remove-line">X</button></td>';
+        tbody.appendChild(tr);
+        bindRow(tr);
+        recalc();
+    });
+
+    function bindRow(tr) {
+        tr.querySelector('.remove-line').addEventListener('click', function() {
+            if (document.querySelectorAll('.line-row').length > 1) {
+                tr.remove();
+                recalc();
+            }
+        });
+        tr.querySelector('.debit-input').addEventListener('input', recalc);
+        tr.querySelector('.credit-input').addEventListener('input', recalc);
+    }
+
+    document.querySelectorAll('.line-row').forEach(bindRow);
+
+    document.getElementById('journal-form').addEventListener('submit', function(e) {
+        var totalD = parseFloat(document.getElementById('total-debit').textContent) || 0;
+        var totalC = parseFloat(document.getElementById('total-credit').textContent) || 0;
+        if (Math.abs(totalD - totalC) >= 0.005) {
+            e.preventDefault();
+            alert('Total debits must equal total credits before saving.');
+        }
+    });
+
+    recalc();
+})();
+</script>
+{% endblock %}

@@ -1,0 +1,56 @@
+{% extends "base.html" %}
+{% block title %}Employees - HR - ERP{% endblock %}
+{% block content %}
+<div class="page-header">
+    <h1>Employees</h1>
+    <div class="actions">
+        <a href="{{ url_for('hr.departments') }}" class="btn btn-secondary">Departments</a>
+        <a href="{{ url_for('hr.leaves') }}" class="btn btn-secondary">Leave Requests</a>
+        <a href="{{ url_for('hr.new') }}" class="btn btn-primary">New Employee</a>
+    </div>
+</div>
+
+<div class="card">
+    <table>
+        <thead>
+            <tr>
+                <th>Employee #</th>
+                <th>Name</th>
+                <th>Department</th>
+                <th>Job Title</th>
+                <th>Status</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for emp in employees %}
+            <tr>
+                <td><a href="{{ url_for('hr.detail', id=emp.id) }}">{{ emp.employee_number }}</a></td>
+                <td><a href="{{ url_for('hr.detail', id=emp.id) }}">{{ emp.first_name }} {{ emp.last_name }}</a></td>
+                <td>{{ emp.department_name or '-' }}</td>
+                <td>{{ emp.job_title or '-' }}</td>
+                <td>
+                    {% if emp.active %}
+                    <span class="badge badge-invoiced">Active</span>
+                    {% else %}
+                    <span class="badge badge-cancelled">Inactive</span>
+                    {% endif %}
+                </td>
+                <td class="actions">
+                    <a href="{{ url_for('hr.edit', id=emp.id) }}" class="btn btn-secondary btn-sm">Edit</a>
+                    {% if emp.active %}
+                    <form method="post" action="{{ url_for('hr.deactivate', id=emp.id) }}" style="display:inline;" onsubmit="return confirm('Deactivate this employee?');">
+                        <button type="submit" class="btn btn-danger btn-sm">Deactivate</button>
+                    </form>
+                    {% endif %}
+                </td>
+            </tr>
+            {% else %}
+            <tr>
+                <td colspan="6" class="text-center">No employees found.</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endblock %}

@@ -1,0 +1,101 @@
+{% extends "base.html" %}
+
+{% block title %}{{ po.po_number }} - ERP{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <h1>{{ po.po_number }}</h1>
+    <div class="actions">
+        {% if po.status == 'draft' %}
+        <a href="{{ url_for('purchasing.edit', id=po.id) }}" class="btn btn-primary">Edit</a>
+        <form method="POST" action="{{ url_for('purchasing.confirm', id=po.id) }}" style="display:inline">
+            <button type="submit" class="btn btn-success">Confirm</button>
+        </form>
+        <form method="POST" action="{{ url_for('purchasing.cancel', id=po.id) }}" style="display:inline"
+              onsubmit="return confirm('Cancel this purchase order?')">
+            <button type="submit" class="btn btn-danger">Cancel PO</button>
+        </form>
+        {% elif po.status == 'confirmed' %}
+        <form method="POST" action="{{ url_for('purchasing.receive', id=po.id) }}" style="display:inline">
+            <button type="submit" class="btn btn-success">Receive Goods</button>
+        </form>
+        <form method="POST" action="{{ url_for('purchasing.cancel', id=po.id) }}" style="display:inline"
+              onsubmit="return confirm('Cancel this purchase order?')">
+            <button type="submit" class="btn btn-danger">Cancel PO</button>
+        </form>
+        {% endif %}
+        <a href="{{ url_for('purchasing.index') }}" class="btn btn-secondary">Back to List</a>
+    </div>
+</div>
+
+<div class="card">
+    <div class="detail-grid">
+        <div class="detail-item">
+            <label>PO Number</label>
+            <div class="value">{{ po.po_number }}</div>
+        </div>
+        <div class="detail-item">
+            <label>Status</label>
+            <div class="value"><span class="badge badge-{{ po.status }}">{{ po.status }}</span></div>
+        </div>
+        <div class="detail-item">
+            <label>Supplier</label>
+            <div class="value">{{ po.supplier_name }}</div>
+        </div>
+        <div class="detail-item">
+            <label>Order Date</label>
+            <div class="value">{{ po.order_date }}</div>
+        </div>
+        <div class="detail-item">
+            <label>Expected Date</label>
+            <div class="value">{{ po.expected_date or '-' }}</div>
+        </div>
+        <div class="detail-item">
+            <label>Created</label>
+            <div class="value">{{ po.created_at }}</div>
+        </div>
+    </div>
+    {% if po.notes %}
+    <div class="mt-1">
+        <label style="font-size:0.8rem;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.05em">Notes</label>
+        <div>{{ po.notes }}</div>
+    </div>
+    {% endif %}
+</div>
+
+<div class="card">
+    <h3>Line Items</h3>
+    <table>
+        <thead>
+            <tr>
+                <th>SKU</th>
+                <th>Product</th>
+                <th class="text-right">Quantity</th>
+                <th class="text-right">Unit Price</th>
+                <th class="text-right">Line Total</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for line in lines %}
+            <tr>
+                <td>{{ line.sku }}</td>
+                <td>{{ line.product_name }}</td>
+                <td class="text-right">{{ line.quantity }}</td>
+                <td class="text-right">${{ "%.2f"|format(line.unit_price) }}</td>
+                <td class="text-right">${{ "%.2f"|format(line.line_total) }}</td>
+            </tr>
+            {% else %}
+            <tr>
+                <td colspan="5">No line items.</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+
+    <div class="totals">
+        <div class="total-line"><span>Subtotal:</span> <span>${{ "%.2f"|format(po.subtotal) }}</span></div>
+        <div class="total-line"><span>Tax (10%):</span> <span>${{ "%.2f"|format(po.tax_amount) }}</span></div>
+        <div class="total-line grand-total"><span>Total:</span> <span>${{ "%.2f"|format(po.total) }}</span></div>
+    </div>
+</div>
+{% endblock %}

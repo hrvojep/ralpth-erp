@@ -1,0 +1,150 @@
+{% extends "base.html" %}
+{% block title %}{{ "Edit Sales Order" if editing else "New Sales Order" }} - ERP{% endblock %}
+{% block content %}
+<div class="page-header">
+    <h1>{{ "Edit Sales Order" if editing else "New Sales Order" }}</h1>
+</div>
+
+<form method="post">
+    <div class="card">
+        <div class="form-row">
+            <div class="form-group">
+                <label>Customer</label>
+                <select name="customer_id" required>
+                    <option value="">-- Select Customer --</option>
+                    {% for c in customers %}
+                    <option value="{{ c.id }}" {% if order and order.customer_id == c.id %}selected{% endif %}>{{ c.name }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="form-group">
+                <label>Order Date</label>
+                <input type="date" name="order_date" value="{{ order.order_date if order else '' }}">
+            </div>
+        </div>
+        <div class="form-group">
+            <label>Notes</label>
+            <textarea name="notes">{{ order.notes if order and order.notes else '' }}</textarea>
+        </div>
+    </div>
+
+    <div class="card">
+        <h3>Line Items</h3>
+        <table class="line-items-table">
+            <thead>
+                <tr>
+                    <th>Product</th>
+                    <th>Quantity</th>
+                    <th>Unit Price</th>
+                    <th class="text-right">Line Total</th>
+                    <th></th>
+                </tr>
+            </thead>
+            <tbody id="line-items-body">
+                {% if editing and lines %}
+                {% for line in lines %}
+                <tr class="line-item-row">
+                    <td>
+                        <select name="product_id[]" required onchange="fillPrice(this)">
+                            <option value="">-- Select --</option>
+                            {% for p in products %}
+                            <option value="{{ p.id }}" {% if p.id == line.product_id %}selected{% endif %}>{{ p.name }}</option>
+                            {% endfor %}
+                        </select>
+                    </td>
+                    <td><input type="number" name="quantity[]" step="any" min="0.01" value="{{ line.quantity }}" required oninput="calcLineTotal(this)"></td>
+                    <td><input type="number" name="unit_price[]" step="any" min="0" value="{{ line.unit_price }}" required oninput="calcLineTotal(this)"></td>
+                    <td class="text-right line-total">${{ "%.2f"|format(line.line_total) }}</td>
+                    <td><button type="button" class="btn btn-danger btn-sm" onclick="removeLine(this)">X</button></td>
+                </tr>
+                {% endfor %}
+                {% endif %}
+            </tbody>
+        </table>
+        <div class="mt-1">
+            <button type="button" class="btn btn-secondary" onclick="addLine()">Add Line</button>
+        </div>
+        <div class="totals" id="order-totals">
+            <div class="total-line"><span>Subtotal:</span> <span id="subtotal">$0.00</span></div>
+            <div class="total-line"><span>Tax (10%):</span> <span id="tax-amount">$0.00</span></div>
+            <div class="total-line grand-total"><span>Total:</span> <span id="grand-total">$0.00</span></div>
+        </div>
+    </div>
+
+    <div class="actions mt-1">
+        <button type="submit" class="btn btn-primary">{{ "Update Order" if editing else "Create Order" }}</button>
+        <a href="{{ url_for('sales.detail', id=order.id) if editing else url_for('sales.index') }}" class="btn btn-secondary">Cancel</a>
+    </div>
+</form>
+
+<script>
+var products = {{ products_json|safe }};
+var productMap = {};
+products.forEach(function(p) {
+    productMap[p.id] = p;
+});
+
+function buildProductOptions(selectedId) {
+    var html = '<option value="">-- Select --</option>';
+    products.forEach(function(p) {
+        var sel = (selectedId && p.id == selectedId) ? ' selected' : '';
+        html += '<option value="' + p.id + '"' + sel + '>' + p.name + '</option>';
+    });
+    return html;
+}
+
+function addLine() {
+    var tbody = document.getElementById('line-items-body');
+    var tr = document.createElement('tr');
+    tr.className = 'line-item-row';
+    tr.innerHTML =
+        '<td><select name="product_id[]" required onchange="fillPrice(this)">' + buildProductOptions() + '</select></td>' +
+        '<td><input type="number" name="quantity[]" step="any" min="0.01" value="1" required oninput="calcLineTotal(this)"></td>' +
+        '<td><input type="number" name="unit_price[]" step="any" min="0" value="0" required oninput="calcLineTotal(this)"></td>' +
+        '<td class="text-right line-total">$0.00</td>' +
+        '<td><button type="button" class="btn btn-danger btn-sm" onclick="removeLine(this)">X</button></td>';
+    tbody.appendChild(tr);
+}
+
+function removeLine(btn) {
+    var row = btn.closest('tr');
+    row.remove();
+    recalcTotals();
+}
+
+function fillPrice(sel) {
+    var row = sel.closest('tr');
+    var pid = parseInt(sel.value);
+    if (productMap[pid]) {
+        row.querySelector('[name="unit_price[]"]').value = productMap[pid].unit_price;
+    }
+    calcLineTotal(sel);
+}
+
+function calcLineTotal(el) {
+    var row = el.closest('tr');
+    var qty = parseFloat(row.querySelector('[name="quantity[]"]').value) || 0;
+    var price = parseFloat(row.querySelector('[name="unit_price[]"]').value) || 0;
+    var total = qty * price;
+    row.querySelector('.line-total').textContent = '$' + total.toFixed(2);
+    recalcTotals();
+}
+
+function recalcTotals() {
+    var subtotal = 0;
+    document.querySelectorAll('.line-item-row').forEach(function(row) {
+        var qty = parseFloat(row.querySelector('[name="quantity[]"]').value) || 0;
+        var price = parseFloat(row.querySelector('[name="unit_price[]"]').value) || 0;
+        subtotal += qty * price;
+    });
+    var tax = subtotal * 0.1;
+    var total = subtotal + tax;
+    document.getElementById('subtotal').textContent = '$' + subtotal.toFixed(2);
+    document.getElementById('tax-amount').textContent = '$' + tax.toFixed(2);
+    document.getElementById('grand-total').textContent = '$' + total.toFixed(2);
+}
+
+// Recalculate on page load for edit mode
+recalcTotals();
+</script>
+{% endblock %}

@@ -1,0 +1,50 @@
+{% extends "base.html" %}
+
+{% block title %}Purchase Orders - ERP{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <h1>Purchase Orders</h1>
+    <a href="{{ url_for('purchasing.new') }}" class="btn btn-primary">New Purchase Order</a>
+</div>
+
+<div class="card">
+    <table>
+        <thead>
+            <tr>
+                <th>PO Number</th>
+                <th>Supplier</th>
+                <th>Order Date</th>
+                <th>Expected Date</th>
+                <th>Status</th>
+                <th class="text-right">Total</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for po in orders %}
+            <tr>
+                <td><a href="{{ url_for('purchasing.detail', id=po.id) }}">{{ po.po_number }}</a></td>
+                <td>{{ po.supplier_name }}</td>
+                <td>{{ po.order_date }}</td>
+                <td>{{ po.expected_date or '-' }}</td>
+                <td><span class="badge badge-{{ po.status }}">{{ po.status }}</span></td>
+                <td class="text-right">${{ "%.2f"|format(po.total) }}</td>
+                <td>
+                    <div class="actions">
+                        <a href="{{ url_for('purchasing.detail', id=po.id) }}" class="btn btn-secondary btn-sm">View</a>
+                        {% if po.status == 'draft' %}
+                        <a href="{{ url_for('purchasing.edit', id=po.id) }}" class="btn btn-primary btn-sm">Edit</a>
+                        {% endif %}
+                    </div>
+                </td>
+            </tr>
+            {% else %}
+            <tr>
+                <td colspan="7">No purchase orders yet. <a href="{{ url_for('purchasing.new') }}">Create one</a>.</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endblock %}

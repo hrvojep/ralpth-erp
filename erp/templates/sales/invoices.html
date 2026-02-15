@@ -1,0 +1,43 @@
+{% extends "base.html" %}
+{% block title %}Invoices - ERP{% endblock %}
+{% block content %}
+<div class="page-header">
+    <h1>Invoices</h1>
+    <a href="{{ url_for('sales.index') }}" class="btn btn-secondary">Sales Orders</a>
+</div>
+
+<div class="card">
+    <table>
+        <thead>
+            <tr>
+                <th>Invoice #</th>
+                <th>Customer</th>
+                <th>Date</th>
+                <th>Status</th>
+                <th class="text-right">Total</th>
+                <th class="text-right">Amount Paid</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for inv in invoices %}
+            <tr>
+                <td><a href="{{ url_for('sales.invoice_detail', id=inv.id) }}">{{ inv.invoice_number }}</a></td>
+                <td>{{ inv.customer_name }}</td>
+                <td>{{ inv.invoice_date }}</td>
+                <td><span class="badge badge-{{ inv.status }}">{{ inv.status }}</span></td>
+                <td class="text-right">${{ "%.2f"|format(inv.total) }}</td>
+                <td class="text-right">${{ "%.2f"|format(inv.amount_paid) }}</td>
+                <td class="actions">
+                    <a href="{{ url_for('sales.invoice_detail', id=inv.id) }}" class="btn btn-secondary btn-sm">View</a>
+                </td>
+            </tr>
+            {% else %}
+            <tr>
+                <td colspan="7" class="text-center">No invoices found.</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endblock %}

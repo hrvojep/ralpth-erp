@@ -1,0 +1,59 @@
+{% extends "base.html" %}
+{% block title %}{{ contact['name'] }} - Contacts - ERP{% endblock %}
+{% block content %}
+<div class="page-header">
+    <h1>{{ contact['name'] }}</h1>
+    <div class="actions">
+        <a href="{{ url_for('contacts.edit', id=contact['id']) }}" class="btn btn-primary">Edit</a>
+        <form method="post" action="{{ url_for('contacts.delete', id=contact['id']) }}" style="display:inline;" onsubmit="return confirm('Delete this contact?');">
+            <button type="submit" class="btn btn-danger">Delete</button>
+        </form>
+    </div>
+</div>
+
+<div class="card">
+    <div class="detail-grid">
+        <div class="detail-item">
+            <label>Name</label>
+            <div class="value">{{ contact['name'] }}</div>
+        </div>
+        <div class="detail-item">
+            <label>Type</label>
+            <div class="value"><span class="badge badge-{{ contact['contact_type'] }}">{{ contact['contact_type'] }}</span></div>
+        </div>
+        <div class="detail-item">
+            <label>Email</label>
+            <div class="value">{{ contact['email'] or '-' }}</div>
+        </div>
+        <div class="detail-item">
+            <label>Phone</label>
+            <div class="value">{{ contact['phone'] or '-' }}</div>
+        </div>
+        <div class="detail-item">
+            <label>Address</label>
+            <div class="value">{{ contact['address'] or '-' }}</div>
+        </div>
+        <div class="detail-item">
+            <label>City</label>
+            <div class="value">{{ contact['city'] or '-' }}</div>
+        </div>
+        <div class="detail-item">
+            <label>Country</label>
+            <div class="value">{{ contact['country'] or '-' }}</div>
+        </div>
+        <div class="detail-item">
+            <label>Tax ID</label>
+            <div class="value">{{ contact['tax_id'] or '-' }}</div>
+        </div>
+    </div>
+    {% if contact['notes'] %}
+    <div class="mt-1">
+        <label style="font-size:0.8rem; color:var(--text-muted); text-transform:uppercase; letter-spacing:0.05em;">Notes</label>
+        <div class="value">{{ contact['notes'] }}</div>
+    </div>
+    {% endif %}
+    <div class="mt-1" style="font-size:0.8rem; color:var(--text-muted);">
+        Created: {{ contact['created_at'] }}
+    </div>
+</div>
+{% endblock %}
