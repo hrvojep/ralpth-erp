@@ -3,7 +3,7 @@
 import sqlite3
 import os
 
-DB_PATH = os.path.join(os.path.dirname(__file__), "erp.db")
+from erp.db import DB_PATH
 
 def seed():
     db = sqlite3.connect(DB_PATH)

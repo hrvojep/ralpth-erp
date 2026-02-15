@@ -2,7 +2,7 @@ import os
 import secrets
 from flask import Flask
 from flask_login import LoginManager
-from erp.db import get_db, init_db
+from erp.db import get_db, init_db, DB_PATH
 from erp.auth import auth_bp, User
 from erp.modules.dashboard import dashboard_bp
 from erp.modules.contacts import contacts_bp
@@ -42,7 +42,25 @@ def create_app():
     init_db()
     _ensure_admin()
 
+    # On Vercel, /tmp is ephemeral — auto-seed demo data on cold starts
+    if os.environ.get("VERCEL") and not os.path.exists(DB_PATH + ".seeded"):
+        _seed_demo_data()
+        open(DB_PATH + ".seeded", "w").close()
+
     return app
+
+
+def _seed_demo_data():
+    """Seed sample data on Vercel cold starts."""
+    import importlib.util
+    import sys
+    spec = importlib.util.spec_from_file_location(
+        "seed_data",
+        os.path.join(os.path.dirname(os.path.dirname(__file__)), "seed_data.py"),
+    )
+    mod = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(mod)
+    mod.seed()
 
 
 def _ensure_admin():
